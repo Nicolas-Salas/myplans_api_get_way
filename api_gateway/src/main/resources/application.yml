@@ -1,0 +1,25 @@
+server:
+  port: 8095
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        # --- RUTA 1: MICROSERVICIO DE AUTENTICACIÓN ---
+        - id: auth-service-route
+          uri: http://localhost:8090
+          predicates:
+            - Path=/api/auth/**, /api/admin/**, /swagger-ui/**, /v3/api-docs/**
