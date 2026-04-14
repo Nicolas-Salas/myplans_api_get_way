@@ -9,7 +9,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "http://localhost:3000"
+            allowedOrigins: "http://localhost:3000, http://localhost:5173"
             allowedMethods:
               - GET
               - POST
@@ -18,8 +18,24 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
       routes:
-        # --- RUTA 1: MICROSERVICIO DE AUTENTICACIÓN ---
+        # --- 1. Auth Service ---
         - id: auth-service-route
           uri: http://localhost:8090
           predicates:
-            - Path=/api/auth/**, /api/admin/**, /swagger-ui/**, /v3/api-docs/**
+            - Path=/api/auth/**, /api/admin/**
+            
+        # --- 2. Ruta para la Documentacion (Auth Service) ---
+        - id: auth-docs-route
+          uri: http://localhost:8090
+          predicates:
+            - Path=/api-docs-auth
+          filters:
+            - RewritePath=/api-docs-auth, /api-docs
+
+# --- Configuracion Interfaz Swagger ---
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Microservicio de Autenticación y Usuarios (myplans_auth)
+        url: /api-docs-auth
