@@ -1,41 +1,73 @@
 server:
-  port: 8095
+  port: ${SERVER_PORT:8095}
 
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "http://localhost:3000, http://localhost:5173"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
+      # Eliminamos el globalcors del yml original: el bug era que
+      # allowedOrigins se interpretaba como string-con-comas en vez de
+      # lista. Ahora CORS se configura programáticamente en CorsConfig.java.
       routes:
-        # --- 1. Auth Service ---
+
+        # ===== AUTH SERVICE =====
         - id: auth-service-route
-          uri: http://localhost:8090
+          uri: ${AUTH_SERVICE_URI:http://localhost:8090}
           predicates:
-            - Path=/api/auth/**, /api/admin/**
-            
-        # --- 2. Ruta para la Documentacion (Auth Service) ---
+            - Path=/api/auth/**,/api/admin/**
+
+        # Documentación OpenAPI del Auth (reescritura para Swagger consolidado)
         - id: auth-docs-route
-          uri: http://localhost:8090
+          uri: ${AUTH_SERVICE_URI:http://localhost:8090}
           predicates:
             - Path=/api-docs-auth
           filters:
-            - RewritePath=/api-docs-auth, /api-docs
+            - RewritePath=/api-docs-auth,/api-docs
 
-# --- Configuracion Interfaz Swagger ---
+        # ===== CORE SERVICE =====
+        # Cubre todos los endpoints del Core: planos, tags, export.
+        - id: core-service-route
+          uri: ${CORE_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/**
+
+        # Documentación OpenAPI del Core
+        - id: core-docs-route
+          uri: ${CORE_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api-docs-core
+          filters:
+            - RewritePath=/api-docs-core,/api-docs
+
+# ===== JWT =====
+# Mismo secret que auth y core. En producción usar variable de entorno.
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+
+# ===== CORS (consumido por CorsConfig.java) =====
+gateway:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# ===== Swagger consolidado =====
+# El frontend o un dev pueden ver toda la API desde el gateway:
+# http://localhost:8095/swagger-ui.html
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
     urls:
-      - name: Microservicio de Autenticación y Usuarios (myplans_auth)
+      - name: Autenticación y Usuarios (myplans_auth)
         url: /api-docs-auth
+      - name: Core - Planos y TAGs (myplans_core)
+        url: /api-docs-core
+
+# ===== Actuator (healthcheck para Docker/K8s) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
