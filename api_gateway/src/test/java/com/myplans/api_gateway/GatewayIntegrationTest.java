@@ -12,7 +12,8 @@ import java.util.List;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
                 "AUTH_SERVICE_URI=http://localhost:1",
-                "CORE_SERVICE_URI=http://localhost:1"
+                "CORE_SERVICE_URI=http://localhost:1",
+                "AUDIT_SERVICE_URI=http://localhost:1"
 })
 class GatewayIntegrationTest {
 
@@ -85,6 +86,40 @@ class GatewayIntegrationTest {
         void givenNoToken_whenSwaggerUi_thenAccessible() {
                 webTestClient.get()
                                 .uri("/swagger-ui.html")
+                                .exchange()
+                                .expectStatus()
+                                .value(status -> org.assertj.core.api.Assertions.assertThat(status).isNotEqualTo(401));
+        }
+
+        @Test
+        void givenNoToken_whenAccessProtectedAudit_thenReturn401() {
+                webTestClient.get()
+                                .uri("/api/v1/historial/tag/42")
+                                .exchange()
+                                .expectStatus().isUnauthorized()
+                                .expectBody()
+                                .jsonPath("$.status").isEqualTo(401)
+                                .jsonPath("$.message").exists();
+        }
+
+        @Test
+        void givenValidToken_whenAccessAudit_thenForwarded() {
+                String token = TestJwtHelper.validToken(
+                                "sup@test.com", 2, List.of("ROLE_SUPERVISOR"));
+
+                webTestClient.get()
+                                .uri("/api/v1/historial/tag/42")
+                                .header("Authorization", "Bearer " + token)
+                                .exchange()
+                                .expectStatus().value(status -> org.assertj.core.api.Assertions.assertThat(status)
+                                                .isNotEqualTo(401)
+                                                .isBetween(500, 599));
+        }
+
+        @Test
+        void givenNoToken_whenAuditDocs_thenAccessible() {
+                webTestClient.get()
+                                .uri("/api-docs-audit")
                                 .exchange()
                                 .expectStatus()
                                 .value(status -> org.assertj.core.api.Assertions.assertThat(status).isNotEqualTo(401));
