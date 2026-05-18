@@ -47,6 +47,19 @@ spring:
           filters:
             - RewritePath=/api-docs-report,/api-docs
 
+        # ===== WORKER SERVICE (IA) =====
+        - id: worker-service-route
+          uri: ${WORKER_SERVICE_URI:http://localhost:8099}
+          predicates:
+            - Path=/api/v1/worker/**
+
+        - id: worker-docs-route
+          uri: ${WORKER_SERVICE_URI:http://localhost:8099}
+          predicates:
+            - Path=/api-docs-worker
+          filters:
+            - RewritePath=/api-docs-worker,/openapi.json
+
         # ===== CORE SERVICE =====
         - id: core-service-route
           uri: ${CORE_SERVICE_URI:http://localhost:8081}
@@ -84,6 +97,8 @@ springdoc:
         url: /api-docs-audit
       - name: Reportes (myplans_report)
         url: /api-docs-report
+      - name: Worker IA (myplans_worker)
+        url: /api-docs-worker
 
 # ===== Actuator (healthcheck para Docker/K8s) =====
 management:
