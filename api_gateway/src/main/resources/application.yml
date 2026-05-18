@@ -1,0 +1,96 @@
+server:
+  port: ${SERVER_PORT:8095}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+
+        # ===== AUTH SERVICE =====
+        - id: auth-service-route
+          uri: ${AUTH_SERVICE_URI:http://localhost:8090}
+          predicates:
+            - Path=/api/auth/**,/api/admin/**
+
+        - id: auth-docs-route
+          uri: ${AUTH_SERVICE_URI:http://localhost:8090}
+          predicates:
+            - Path=/api-docs-auth
+          filters:
+            - RewritePath=/api-docs-auth,/api-docs
+
+        # ===== AUDIT SERVICE =====
+        - id: audit-service-route
+          uri: ${AUDIT_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/historial/**
+            
+        - id: audit-docs-route
+          uri: ${AUDIT_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api-docs-audit
+          filters:
+            - RewritePath=/api-docs-audit,/api-docs
+
+        # ===== REPORT SERVICE =====
+        - id: reports-service-route
+          uri: ${REPORTS_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/reportes/**
+
+        - id: report-docs-route
+          uri: ${REPORTS_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api-docs-report
+          filters:
+            - RewritePath=/api-docs-report,/api-docs
+
+        # ===== CORE SERVICE =====
+        - id: core-service-route
+          uri: ${CORE_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/**
+
+        # Documentación OpenAPI del Core
+        - id: core-docs-route
+          uri: ${CORE_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api-docs-core
+          filters:
+            - RewritePath=/api-docs-core,/api-docs
+
+# ===== JWT =====
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+
+# ===== CORS (consumido por CorsConfig.java) =====
+gateway:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# ===== Swagger consolidado =====
+# http://localhost:8095/swagger-ui.html
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Autenticación y Usuarios (myplans_auth)
+        url: /api-docs-auth
+      - name: Core - Planos y TAGs (myplans_core)
+        url: /api-docs-core
+      - name: Auditoría (myplans_audit)
+        url: /api-docs-audit
+      - name: Reportes (myplans_report)
+        url: /api-docs-report
+
+# ===== Actuator (healthcheck para Docker/K8s) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: never
