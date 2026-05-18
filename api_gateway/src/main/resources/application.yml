@@ -34,6 +34,19 @@ spring:
           filters:
             - RewritePath=/api-docs-audit,/api-docs
 
+        # ===== REPORT SERVICE =====
+        - id: reports-service-route
+          uri: ${REPORTS_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/reportes/**
+
+        - id: report-docs-route
+          uri: ${REPORTS_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api-docs-report
+          filters:
+            - RewritePath=/api-docs-report,/api-docs
+
         # ===== CORE SERVICE =====
         - id: core-service-route
           uri: ${CORE_SERVICE_URI:http://localhost:8081}
@@ -69,6 +82,8 @@ springdoc:
         url: /api-docs-core
       - name: Auditoría (myplans_audit)
         url: /api-docs-audit
+      - name: Reportes (myplans_report)
+        url: /api-docs-report
 
 # ===== Actuator (healthcheck para Docker/K8s) =====
 management:
