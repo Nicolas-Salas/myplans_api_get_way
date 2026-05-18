@@ -200,20 +200,3 @@ otra en cada microservicio downstream. Esto se hace a propósito:
   3. Los servicios necesitan el JWT entero para extraer claims como
      `id_usuario` con tipos correctos.
 
-## Próximos pasos sugeridos
-
-1. **Rate limiting**: agregar `spring-cloud-starter-gateway` rate
-   limiter (basado en Redis) para limitar peticiones por IP/usuario,
-   especialmente en endpoints públicos como `/api/auth/login` y
-   `/api/auth/reset-password` para mitigar ataques de fuerza bruta.
-2. **Circuit breaker**: agregar `resilience4j` para no propagar fallos
-   en cascada cuando un servicio downstream se cae.
-3. **Trazabilidad distribuida**: agregar `micrometer-tracing` para
-   inyectar `X-Trace-Id` en cada petición y correlacionar logs entre
-   los 3 servicios.
-4. **HTTPS / TLS termination**: en producción, terminar TLS en el
-   gateway (o en un load balancer delante) y dejar HTTP plano entre
-   gateway y servicios internos.
-5. **Service discovery**: cuando haya varias instancias de auth/core,
-   integrar Eureka, Consul o k8s service discovery en vez de URIs
-   estáticas en yml.
