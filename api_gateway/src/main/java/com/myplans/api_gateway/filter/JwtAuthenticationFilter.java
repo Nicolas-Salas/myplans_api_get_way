@@ -83,7 +83,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/swagger-resources",
             "/webjars",
             "/v3/api-docs",
-            "/actuator/health"
+            "/actuator/health",
+            "/api/v1/worker/health"
     );
 
     private final ObjectMapper mapper = new ObjectMapper();
