@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: api-gateway
+  codec:
+    max-in-memory-size: 52428800   # 50 MB — necesario para transferir PDFs al worker IA
   cloud:
     gateway:
       routes:
